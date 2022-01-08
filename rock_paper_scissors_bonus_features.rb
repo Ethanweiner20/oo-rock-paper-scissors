@@ -44,13 +44,13 @@ class RPSGame
   end
 
   def set_result
-    if user.move > computer.move
-      self.result = :user
-    elsif user.move < computer.move
-      self.result = :computer
-    else
-      self.result = :tie
-    end
+    self.result = if user.move > computer.move
+                    :user
+                  elsif user.move < computer.move
+                    :computer
+                  else
+                    :tie
+                  end
   end
 
   def update_scores
