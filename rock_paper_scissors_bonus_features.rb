@@ -1,11 +1,33 @@
 require 'yaml'
 
+module Displayable
+  def message(message_key)
+    prompt(RPSGame::MESSAGES[message_key])
+  end
+
+  def prompt(message)
+    puts "==> #{message}"
+  end
+
+  def prompt_to_continue
+    message("continue_game")
+    gets
+    system('clear')
+  end
+
+  def horizontal_rule(char, length)
+    char * length
+  end
+end
+
 class RPSGame
+  include Displayable
+
   MESSAGES = YAML.load_file('rock_paper_scissors_messages.yml')
   SLEEP_DURATION = 1
+  WINNING_SCORE = 3
 
-  def initialize(winning_score)
-    @winning_score = winning_score
+  def initialize
     @user = User.new
     @computer = CPU.new
     @result = nil
@@ -15,7 +37,7 @@ class RPSGame
   private
 
   attr_accessor :result
-  attr_reader :user, :computer, :history, :winning_score
+  attr_reader :user, :computer, :history
 
   public
 
@@ -23,6 +45,7 @@ class RPSGame
     display_welcome_message
 
     loop do
+      display_score
       determine_moves
       update_game_state
       display_game_info
@@ -93,17 +116,17 @@ class RPSGame
   end
 
   def display_game_end
-    if user.score == winning_score
+    if user.score == WINNING_SCORE
       prompt("#{user.name} won the game!")
       history.display
-    elsif computer.score == winning_score
+    elsif computer.score == WINNING_SCORE
       prompt("#{computer.name} won the game!")
       history.display
     end
   end
 
   def game_finished?
-    user.score == winning_score || computer.score == winning_score
+    user.score == WINNING_SCORE || computer.score == WINNING_SCORE
   end
 
   def display_goodbye_message
@@ -112,6 +135,8 @@ class RPSGame
 end
 
 class Player
+  include Displayable
+
   attr_reader :name, :move, :score
 
   def initialize
@@ -151,20 +176,21 @@ class User < Player
   def choose
     message("choices")
     choice = retrieve_choice
+    system('clear')
     self.move = Move.new(choice)
     display_choice
   end
 
   def retrieve_choice
-    choice = nil
+    input = nil
 
     loop do
-      choice = gets.chomp.downcase
-      break if Move::CHOICES.include?(choice)
+      input = gets.chomp.downcase
+      break if Move::ABBREVIATIONS.keys.include?(input)
       message("invalid_input")
     end
 
-    choice
+    Move::ABBREVIATIONS[input]
   end
 end
 
@@ -183,6 +209,7 @@ class Move
   include Comparable
 
   CHOICES = %w(rock paper scissors lizard spock)
+  ABBREVIATIONS = %w(r p s l sp).zip(CHOICES).to_h
   LOSING_PAIRS = [%w(scissors lizard), %w(rock spock),
                   %w(paper lizard), %w(paper spock), %w(rock scissors)]
   WINNING_COMBINATIONS = CHOICES.zip(LOSING_PAIRS).to_h
@@ -219,6 +246,8 @@ class Move
 end
 
 class GameHistory
+  include Displayable
+
   def initialize(user_name, computer_name)
     @user_name = user_name
     @computer_name = computer_name
@@ -226,7 +255,8 @@ class GameHistory
   end
 
   def add_match(user_move, computer_move, result)
-    matches << Match.new(user_move, computer_move, result)
+    matches << Match.new(user_move, computer_move, result,
+                         user_name, computer_name)
   end
 
   def display
@@ -263,10 +293,12 @@ class GameHistory
 end
 
 class Match
-  def initialize(user_move, computer_move, result)
+  def initialize(user_move, computer_move, result, user_name, computer_name)
     @user_move = user_move
     @computer_move = computer_move
     @result = result
+    @user_name = user_name
+    @computer_name = computer_name
   end
 
   def display(match_number, column_widths)
@@ -277,32 +309,19 @@ class Match
     puts row.join
   end
 
+  def winner(result)
+    case result
+    when :tied then "tied"
+    when :user then user_name
+    when :computer then computer_name
+    end
+  end
+
   private
 
-  attr_reader :user_move, :computer_move, :result
-end
-
-# HELPER METHODS
-
-def message(message_key)
-  prompt(RPSGame::MESSAGES[message_key])
-end
-
-def prompt(message)
-  puts "==> #{message}"
-end
-
-def prompt_to_continue
-  message("continue_game")
-  gets
-  system('clear')
-end
-
-def horizontal_rule(char, length)
-  char * length
+  attr_reader :user_move, :computer_move, :result, :user_name, :computer_name
 end
 
 # GAME INITIALIZATION
 
-CUSTOM_WINNING_SCORE = 3
-RPSGame.new(CUSTOM_WINNING_SCORE).play
+RPSGame.new.play

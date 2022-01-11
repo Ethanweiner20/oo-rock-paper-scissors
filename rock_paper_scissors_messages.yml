@@ -1,7 +1,7 @@
 welcome: "Welcome to RPS!"
 choose_name: "Please type a name for yourself:"
 goodbye: "Thanks for playing RPSLS!"
-choices: "Choose either rock, paper, scissors, lizard, or spock:"
+choices: "Choose either rock, paper, scissors, lizard, or spock (r/p/s/l/sp):"
 invalid_input: "Invalid input! Please try again."
 play_again: "Would you like to play again? (y/n)"
 continue_game: "Press enter to continue."
