@@ -1,3 +1,11 @@
+# To-do: Update the `result` to be one of:
+  # - :tied
+  # - The user object
+  # - The computer obejct
+  # This will make displaying the winner easier (just display winner of result)
+  # This will also make storing history easier (the name of the winner is stored,
+  # and the user/computer data is already provided)
+
 require 'yaml'
 
 module Displayable
@@ -77,9 +85,9 @@ class RPSGame
 
   def update_result
     self.result = if user.move > computer.move
-                    :user
+                    user
                   elsif user.move < computer.move
-                    :computer
+                    computer
                   else
                     :tie
                   end
@@ -87,8 +95,8 @@ class RPSGame
 
   def update_scores
     case result
-    when :user then user.increment_score
-    when :computer then computer.increment_score
+    when user then user.increment_score
+    when computer then computer.increment_score
     end
   end
 
@@ -104,9 +112,9 @@ class RPSGame
 
   def result_message
     case result
-    when :user then "#{user.name} won!"
+    when user then "#{user.name} won!"
     when :tie then "#{user.name} tied with #{computer.name}"
-    when :computer then "#{computer.name} won!"
+    when computer then "#{computer.name} won!"
     end
   end
 
@@ -151,6 +159,10 @@ class Player
 
   def increment_score
     self.score += 1
+  end
+
+  def to_s
+    name
   end
 
   private
@@ -255,8 +267,7 @@ class GameHistory
   end
 
   def add_match(user_move, computer_move, result)
-    matches << Match.new(user_move, computer_move, result,
-                         user_name, computer_name)
+    matches << Match.new(user_move, computer_move, result)
   end
 
   def display
@@ -293,12 +304,10 @@ class GameHistory
 end
 
 class Match
-  def initialize(user_move, computer_move, result, user_name, computer_name)
+  def initialize(user_move, computer_move, result)
     @user_move = user_move
     @computer_move = computer_move
     @result = result
-    @user_name = user_name
-    @computer_name = computer_name
   end
 
   def display(match_number, column_widths)
@@ -309,17 +318,9 @@ class Match
     puts row.join
   end
 
-  def winner(result)
-    case result
-    when :tied then "tied"
-    when :user then user_name
-    when :computer then computer_name
-    end
-  end
-
   private
 
-  attr_reader :user_move, :computer_move, :result, :user_name, :computer_name
+  attr_reader :user_move, :computer_move, :result
 end
 
 # GAME INITIALIZATION
